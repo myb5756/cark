@@ -78,7 +78,30 @@
         }
         .spin-btn:active { transform: scale(0.95); box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4); }
         .spin-btn:disabled { background: #334155; border-color: #475569; color: #94a3b8; cursor: not-allowed; box-shadow: none; }
-        .footer-text { margin-top: 25px; font-size: 15px; color: #e2e8f0; font-weight: bold; z-index: 10; text-shadow: 0 2px 5px rgba(0,0,0,1); text-align: center; }
+
+        /* Kullanıcı bilgi kartı */
+        .user-card {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(14, 165, 233, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 12px;
+            padding: 8px 16px;
+            z-index: 10;
+        }
+        .user-avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: linear-gradient(135deg, #0ea5e9, #3b82f6);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 900; color: #fff; flex-shrink: 0;
+        }
+        .user-details { display: flex; flex-direction: column; }
+        .user-name { font-size: 13px; font-weight: 900; color: #e0f2fe; line-height: 1.2; }
+        .user-id   { font-size: 11px; color: #64748b; font-weight: 800; letter-spacing: 0.5px; }
+
+        .footer-text { margin-top: 12px; font-size: 15px; color: #e2e8f0; font-weight: bold; z-index: 10; text-shadow: 0 2px 5px rgba(0,0,0,1); text-align: center; }
         .bot-tag { position: absolute; bottom: 15px; font-size: 12px; color: #64748b; z-index: 10; font-weight: bold; letter-spacing: 1px; }
         
         .sonuc-overlay {
@@ -112,7 +135,17 @@
     </div>
     
     <button id="spinBtn" class="spin-btn">ÇARKI DÖNDÜR</button>
-    <div class="footer-text" id="userInfo">🟢 Oynamaya Hazır</div>
+
+    <!-- Kullanıcı Bilgi Kartı -->
+    <div class="user-card" id="userCard">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <div class="user-details">
+            <div class="user-name" id="userName">Yükleniyor...</div>
+            <div class="user-id"  id="userId">ID: —</div>
+        </div>
+    </div>
+
+    <div class="footer-text">🟢 Oynamaya Hazır</div>
     <div class="bot-tag">@ResmiGuncelLinkBot</div>
 
     <div id="sonucOverlay" class="sonuc-overlay">
@@ -127,6 +160,19 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.setHeaderColor("#020617");
+
+        // ── Kullanıcı bilgilerini doldur ──
+        (function fillUserInfo() {
+            const user = tg.initDataUnsafe && tg.initDataUnsafe.user;
+            if (!user) return;
+
+            const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ");
+            const initials = (user.first_name || "?").charAt(0).toUpperCase();
+
+            document.getElementById("userAvatar").textContent = initials;
+            document.getElementById("userName").textContent   = fullName || user.username || "Kullanıcı";
+            document.getElementById("userId").textContent     = "ID: " + user.id;
+        })();
 
         const canvas = document.getElementById("wheel");
         const ctx = canvas.getContext("2d");
@@ -201,7 +247,7 @@
 
         function generateCode(prize) {
             const ts = Date.now();
-            // HTML tarafında ID aramıyoruz, direkt bot kendisi halledecek!
+            // Gerçek ID bot tarafında veritabanından alındığı için burada sadece sabit bir yer tutucu koyuyoruz
             const raw = "VIP|" + prize + "|" + ts;
             return btoa(unescape(encodeURIComponent(raw))).replace(/=/g, '');
         }
