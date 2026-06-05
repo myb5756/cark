@@ -162,17 +162,37 @@
         tg.setHeaderColor("#020617");
 
         // ── Kullanıcı bilgilerini doldur ──
-        (function fillUserInfo() {
+        function fillUserInfo() {
             const user = tg.initDataUnsafe && tg.initDataUnsafe.user;
-            if (!user) return;
+            if (user && user.id) {
+                const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ");
+                const initials = (user.first_name || "?").charAt(0).toUpperCase();
+                document.getElementById("userAvatar").textContent = initials;
+                document.getElementById("userName").textContent   = fullName || user.username || "Kullanıcı";
+                document.getElementById("userId").textContent     = "ID: " + user.id;
+            } else {
+                // Telegram bazen veriyi biraz geç dolduruyor, 500ms sonra tekrar dene
+                setTimeout(function() {
+                    const u = tg.initDataUnsafe && tg.initDataUnsafe.user;
+                    if (u && u.id) {
+                        const fullName = [u.first_name, u.last_name].filter(Boolean).join(" ");
+                        const initials = (u.first_name || "?").charAt(0).toUpperCase();
+                        document.getElementById("userAvatar").textContent = initials;
+                        document.getElementById("userName").textContent   = fullName || u.username || "Kullanıcı";
+                        document.getElementById("userId").textContent     = "ID: " + u.id;
+                    } else {
+                        // Gerçek Telegram dışında açıldıysa (test ortamı vs.)
+                        document.getElementById("userAvatar").textContent = "?";
+                        document.getElementById("userName").textContent   = "Misafir";
+                        document.getElementById("userId").textContent     = "Telegram üzerinden aç";
+                    }
+                }, 500);
+            }
+        }
 
-            const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ");
-            const initials = (user.first_name || "?").charAt(0).toUpperCase();
-
-            document.getElementById("userAvatar").textContent = initials;
-            document.getElementById("userName").textContent   = fullName || user.username || "Kullanıcı";
-            document.getElementById("userId").textContent     = "ID: " + user.id;
-        })();
+        // tg.ready() sonrası doldur — bu Telegram'a "sayfa hazır" sinyali verir ve initData'yı garantiler
+        tg.ready();
+        fillUserInfo();
 
         const canvas = document.getElementById("wheel");
         const ctx = canvas.getContext("2d");
