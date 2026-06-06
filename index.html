@@ -72,6 +72,7 @@
             text-shadow: 0 0 8px #38bdf8, 0 0 20px #0ea5e9, 0 0 40px #0284c7;
             letter-spacing: 1px;
         }
+
         .spin-btn {
             margin-top: 45px; padding: 16px 50px; font-size: 20px; font-family: 'Montserrat', sans-serif;
             font-weight: 900; color: #ffffff; background: linear-gradient(135deg, #0ea5e9, #3b82f6);
@@ -82,7 +83,12 @@
         }
         .spin-btn:active { transform: scale(0.95); box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4); }
         .spin-btn:disabled { background: #334155; border-color: #475569; color: #94a3b8; cursor: not-allowed; box-shadow: none; }
+
+
+
         .footer-text { margin-top: 12px; font-size: 15px; color: #e2e8f0; font-weight: bold; z-index: 10; text-shadow: 0 2px 5px rgba(0,0,0,1); text-align: center; }
+        .bot-tag { position: absolute; bottom: 15px; font-size: 12px; color: #64748b; z-index: 10; font-weight: bold; letter-spacing: 1px; }
+        
         .sonuc-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(2, 6, 23, 0.95); z-index: 50;
@@ -115,7 +121,10 @@
     
     <button id="spinBtn" class="spin-btn">ÇARKI DÖNDÜR</button>
 
+
+
     <div class="footer-text">#BonusSemtiKazandırır</div>
+    <div class="bot-tag">@ResmiGuncelLinkBot</div>
 
     <div id="sonucOverlay" class="sonuc-overlay">
         <div id="sonucTitle" class="sonuc-title"></div>
@@ -129,11 +138,8 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.setHeaderColor("#020617");
-        tg.ready();
-        tg.enableClosingConfirmation();
 
-        // ── BURAYA SUNUCUNUN IP/DOMAIN'İNİ YAZ ──
-        const SPIN_API = "https://prozac-tyler-brooklyn-classics.trycloudflare.com/spin_start";
+        tg.ready();
 
         const canvas = document.getElementById("wheel");
         const ctx = canvas.getContext("2d");
@@ -167,22 +173,25 @@
 
         function drawWheel() {
             sectors.forEach((sector, i) => {
-                const angle = i * arc - Math.PI / 2;
+                const angle = i * arc - Math.PI / 2; 
                 ctx.beginPath();
                 ctx.fillStyle = sector.bg;
                 ctx.moveTo(centerX, centerY);
                 ctx.arc(centerX, centerY, radius, angle, angle + arc);
                 ctx.lineTo(centerX, centerY);
                 ctx.fill();
+
                 ctx.strokeStyle = "rgba(148, 163, 184, 0.3)";
                 ctx.lineWidth = 1.5;
                 ctx.stroke();
+
                 ctx.save();
                 ctx.translate(centerX, centerY);
                 ctx.rotate(angle + arc / 2);
                 ctx.textAlign = "right";
                 ctx.fillStyle = sector.text;
                 ctx.font = "bold 13px 'Montserrat'";
+                
                 const lines = sector.label.split('\n');
                 lines.forEach((line, j) => {
                     const yPos = (j * 15) - ((lines.length - 1) * 7.5);
@@ -211,83 +220,57 @@
 
         let currentRotation = 0;
 
-        spinBtn.addEventListener("click", async () => {
+        spinBtn.addEventListener("click", () => {
+            if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
             spinBtn.disabled = true;
-            spinBtn.innerText = "...";
-
-            const userId = tg.initDataUnsafe?.user?.id;
-            if (!userId) {
-                spinBtn.disabled = false;
-                spinBtn.innerText = "ÇARKI DÖNDÜR";
-                return;
-            }
-
-            // 1) Sunucuya bildir: bu kullanıcı çevirmeye başladı, cooldown'ı yaz
-            try {
-                const resp = await fetch(SPIN_API, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ user_id: userId })
-                });
-
-                if (resp.status === 429) {
-                    // Cooldown dolmamış, hile girişimi
-                    spinBtn.innerText = "HAKKIN YOK";
-                    tg.showAlert("Çark hakkın henüz dolmadı!");
-                    return;
-                }
-                // 200 → devam et
-            } catch (e) {
-                // Sunucuya ulaşılamadı — güvenli taraf: yine de engelle
-                spinBtn.innerText = "HATA";
-                tg.showAlert("Bağlantı hatası, lütfen tekrar dene.");
-                spinBtn.disabled = false;
-                spinBtn.innerText = "ÇARKI DÖNDÜR";
-                return;
-            }
-
-            // 2) Cooldown yazıldı, artık animasyonu başlat
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
             spinBtn.innerText = "DÖNÜYOR...";
 
             const winIndex = getWinnerIndex();
             const kazanilan = sectors[winIndex].label.replace('\n', ' ');
-            const destekKodu = generateCode(kazanilan);
-            const durum = kazanilan === "LOSE" ? "kaybetti" : "kazandi";
 
             const sliceAngle = 360 / totalSectors;
             const targetAngle = (winIndex * sliceAngle) + (sliceAngle / 2);
-            const spins = 12 * 360;
+
+            const spins = 12 * 360; 
             const currentMod = currentRotation % 360;
             const targetRotation = (360 - targetAngle);
-            const randomOffset = (Math.random() * (sliceAngle - 4)) - ((sliceAngle - 4) / 2);
+            const randomOffset = (Math.random() * (sliceAngle - 4)) - ((sliceAngle - 4) / 2); 
+            
             currentRotation = currentRotation + spins + targetRotation - currentMod + randomOffset;
             canvas.style.transform = `rotate(${currentRotation}deg)`;
 
-            // 3) Animasyon bitince sonucu göster ve bota gönder
             setTimeout(() => {
+                const destekKodu = generateCode(kazanilan);
+                const durum = kazanilan === "LOSE" ? "kaybetti" : "kazandi";
+                
                 const overlay = document.getElementById("sonucOverlay");
                 const title = document.getElementById("sonucTitle");
                 const desc = document.getElementById("sonucDesc");
 
-                if (durum === "kaybetti") {
-                    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+                if(durum === "kaybetti") {
+                    if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
                     title.className = "sonuc-title sonuc-lose";
                     title.innerText = "MAALESEF 😔";
                     desc.innerText = "Üzgünüm, bir şey kazanamadın.\nBir dahaki sefere!";
                 } else {
-                    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                    if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
                     title.className = "sonuc-title sonuc-win";
                     title.innerText = "TEBRİKLER! 🎉";
                     desc.innerHTML = `Kazandığın Ödül:<br><span style="color:#fff; font-size:22px;">${kazanilan}</span><br><br>Oyun kodun bot üzerinden sana mesaj olarak gönderiliyor...`;
                 }
+
                 overlay.classList.add("show");
 
                 setTimeout(() => {
-                    tg.sendData(JSON.stringify({ durum, odul: kazanilan, kod: destekKodu }));
-                    tg.close();
+                    const data = {
+                        durum: durum,
+                        odul: kazanilan,
+                        kod: destekKodu
+                    };
+                    tg.sendData(JSON.stringify(data));
                 }, 3500);
-            }, 6000);
+
+            }, 6000); 
         });
     </script>
 </body>
