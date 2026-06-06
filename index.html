@@ -236,40 +236,51 @@
             let serverKazandi = false;
             let serverKod = "";
 
+            const spinResult = await new Promise((resolve) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open("POST", `${NGROK_URL}/spin_start`, true);
+                xhr.setRequestHeader("Content-Type", "application/json");
+                xhr.timeout = 10000;
+                xhr.onload = function() {
+                    resolve({ status: xhr.status, text: xhr.responseText });
+                };
+                xhr.onerror = function() {
+                    resolve({ status: 0, text: "network_error" });
+                };
+                xhr.ontimeout = function() {
+                    resolve({ status: 0, text: "timeout" });
+                };
+                xhr.send(JSON.stringify({ user_id: userId }));
+            });
+
+            if (spinResult.status === 0) {
+                alert("Bağlantı hatası: " + spinResult.text);
+                spinBtn.disabled = false;
+                spinBtn.innerText = "ÇARKI DÖNDÜR";
+                return;
+            }
+
+            if (spinResult.status === 429) {
+                alert("Zaten çarkını çevirdin! Bekleme süresi dolmadan tekrar çeviremezsin.");
+                spinBtn.disabled = false;
+                spinBtn.innerText = "ÇARKI DÖNDÜR";
+                return;
+            }
+
+            if (spinResult.status !== 200) {
+                alert("Sunucu hatası: " + spinResult.text);
+                spinBtn.disabled = false;
+                spinBtn.innerText = "ÇARKI DÖNDÜR";
+                return;
+            }
+
             try {
-                const res = await fetch(`${NGROK_URL}/spin_start`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "ngrok-skip-browser-warning": "true",
-                        "Accept": "application/json"
-                    },
-                    body: JSON.stringify({ user_id: userId })
-                });
-
-                const text = await res.text();
-
-                if (res.status === 429) {
-                    alert("Zaten çarkını çevirdin! Bekleme süresi dolmadan tekrar çeviremezsin.");
-                    spinBtn.disabled = false;
-                    spinBtn.innerText = "ÇARKI DÖNDÜR";
-                    return;
-                }
-
-                if (!res.ok) {
-                    alert("Sunucu hatası: " + text);
-                    spinBtn.disabled = false;
-                    spinBtn.innerText = "ÇARKI DÖNDÜR";
-                    return;
-                }
-
-                const data = JSON.parse(text);
-                serverOdul   = data.odul;
+                const data = JSON.parse(spinResult.text);
+                serverOdul    = data.odul;
                 serverKazandi = data.kazandi;
-                serverKod    = data.kod || "";
-
-            } catch (e) {
-                alert("Hata: " + e.message);
+                serverKod     = data.kod || "";
+            } catch(e) {
+                alert("Veri hatası: " + spinResult.text);
                 spinBtn.disabled = false;
                 spinBtn.innerText = "ÇARKI DÖNDÜR";
                 return;
