@@ -132,6 +132,9 @@
         tg.ready();
         tg.enableClosingConfirmation();
 
+        // ── BURAYA SUNUCUNUN IP/DOMAIN'İNİ YAZ ──
+        const SPIN_API = "http://109.120.179.240:8421/spin_start";
+
         const canvas = document.getElementById("wheel");
         const ctx = canvas.getContext("2d");
         const spinBtn = document.getElementById("spinBtn");
@@ -208,21 +211,49 @@
 
         let currentRotation = 0;
 
-        spinBtn.addEventListener("click", () => {
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
+        spinBtn.addEventListener("click", async () => {
             spinBtn.disabled = true;
+            spinBtn.innerText = "...";
+
+            const userId = tg.initDataUnsafe?.user?.id;
+            if (!userId) {
+                spinBtn.disabled = false;
+                spinBtn.innerText = "ÇARKI DÖNDÜR";
+                return;
+            }
+
+            // 1) Sunucuya bildir: bu kullanıcı çevirmeye başladı, cooldown'ı yaz
+            try {
+                const resp = await fetch(SPIN_API, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ user_id: userId })
+                });
+
+                if (resp.status === 429) {
+                    // Cooldown dolmamış, hile girişimi
+                    spinBtn.innerText = "HAKKIN YOK";
+                    tg.showAlert("Çark hakkın henüz dolmadı!");
+                    return;
+                }
+                // 200 → devam et
+            } catch (e) {
+                // Sunucuya ulaşılamadı — güvenli taraf: yine de engelle
+                spinBtn.innerText = "HATA";
+                tg.showAlert("Bağlantı hatası, lütfen tekrar dene.");
+                spinBtn.disabled = false;
+                spinBtn.innerText = "ÇARKI DÖNDÜR";
+                return;
+            }
+
+            // 2) Cooldown yazıldı, artık animasyonu başlat
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
             spinBtn.innerText = "DÖNÜYOR...";
 
-            // ── KRITIK: Sonucu ve kodu HEMEN hesapla, bota HEMEN gönder ──
             const winIndex = getWinnerIndex();
             const kazanilan = sectors[winIndex].label.replace('\n', ' ');
             const destekKodu = generateCode(kazanilan);
             const durum = kazanilan === "LOSE" ? "kaybetti" : "kazandi";
-
-            const payload = JSON.stringify({ durum, odul: kazanilan, kod: destekKodu });
-            tg.sendData(payload);
-            // ── sendData sonrası WebApp Telegram tarafından kapatılır ──
-            // Animasyonu yine de göster (kapatılana kadar görünür kalır)
 
             const sliceAngle = 360 / totalSectors;
             const targetAngle = (winIndex * sliceAngle) + (sliceAngle / 2);
@@ -233,7 +264,7 @@
             currentRotation = currentRotation + spins + targetRotation - currentMod + randomOffset;
             canvas.style.transform = `rotate(${currentRotation}deg)`;
 
-            // Animasyon bitince overlay göster (genellikle Telegram zaten kapattı ama gösterelim)
+            // 3) Animasyon bitince sonucu göster ve bota gönder
             setTimeout(() => {
                 const overlay = document.getElementById("sonucOverlay");
                 const title = document.getElementById("sonucTitle");
@@ -251,6 +282,11 @@
                     desc.innerHTML = `Kazandığın Ödül:<br><span style="color:#fff; font-size:22px;">${kazanilan}</span><br><br>Oyun kodun bot üzerinden sana mesaj olarak gönderiliyor...`;
                 }
                 overlay.classList.add("show");
+
+                setTimeout(() => {
+                    tg.sendData(JSON.stringify({ durum, odul: kazanilan, kod: destekKodu }));
+                    tg.close();
+                }, 3500);
             }, 6000);
         });
     </script>
