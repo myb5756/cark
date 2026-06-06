@@ -72,6 +72,7 @@
             text-shadow: 0 0 8px #38bdf8, 0 0 20px #0ea5e9, 0 0 40px #0284c7;
             letter-spacing: 1px;
         }
+
         .spin-btn {
             margin-top: 45px; padding: 16px 50px; font-size: 20px; font-family: 'Montserrat', sans-serif;
             font-weight: 900; color: #ffffff; background: linear-gradient(135deg, #0ea5e9, #3b82f6);
@@ -82,7 +83,10 @@
         }
         .spin-btn:active { transform: scale(0.95); box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4); }
         .spin-btn:disabled { background: #334155; border-color: #475569; color: #94a3b8; cursor: not-allowed; box-shadow: none; }
+
         .footer-text { margin-top: 12px; font-size: 15px; color: #e2e8f0; font-weight: bold; z-index: 10; text-shadow: 0 2px 5px rgba(0,0,0,1); text-align: center; }
+        .bot-tag { position: absolute; bottom: 15px; font-size: 12px; color: #64748b; z-index: 10; font-weight: bold; letter-spacing: 1px; }
+        
         .sonuc-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(2, 6, 23, 0.95); z-index: 50;
@@ -116,6 +120,7 @@
     <button id="spinBtn" class="spin-btn">ÇARKI DÖNDÜR</button>
 
     <div class="footer-text">#BonusSemtiKazandırır</div>
+    <div class="bot-tag">@ResmiGuncelLinkBot</div>
 
     <div id="sonucOverlay" class="sonuc-overlay">
         <div id="sonucTitle" class="sonuc-title"></div>
@@ -126,32 +131,11 @@
     </div>
 
     <script>
-        const NGROK_URL = "https://bufing-factors-membrane-checklist.trycloudflare.com";
-
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.setHeaderColor("#020617");
-        tg.ready();
 
-        function getUserId() {
-            try {
-                // 1. initDataUnsafe'den dene
-                const u = tg.initDataUnsafe?.user;
-                if (u && u.id) return u.id;
-                // 2. initData'dan manuel parse
-                const params = new URLSearchParams(tg.initData);
-                const userStr = params.get('user');
-                if (userStr) {
-                    const parsed = JSON.parse(decodeURIComponent(userStr));
-                    if (parsed && parsed.id) return parsed.id;
-                }
-                // 3. URL parametresinden al (bot tarafından eklendi)
-                const urlParams = new URLSearchParams(window.location.search);
-                const uid = urlParams.get('uid');
-                if (uid) return parseInt(uid);
-            } catch(e) { console.error("getUserId hatası:", e); }
-            return 0;
-        }
+        tg.ready();
 
         const canvas = document.getElementById("wheel");
         const ctx = canvas.getContext("2d");
@@ -163,18 +147,18 @@
         ctx.scale(scale, scale);
 
         const sectors = [
-            { label: "LOSE",                   weight: 30, bg: "#0f172a", text: "#38bdf8" },
-            { label: "1 TL BET\n150 FREESPIN", weight: 5,  bg: "#f1f5f9", text: "#0f172a" },
-            { label: "1 TL BET\n25 FREESPIN",  weight: 15, bg: "#0f172a", text: "#38bdf8" },
-            { label: "10.000 TL\nNAKİT",       weight: 1,  bg: "#f1f5f9", text: "#0f172a" },
-            { label: "LOSE",                   weight: 20, bg: "#0f172a", text: "#38bdf8" },
-            { label: "2 TL BET\n100 FREESPIN", weight: 5,  bg: "#f1f5f9", text: "#0f172a" },
-            { label: "LOSE",                   weight: 20, bg: "#0f172a", text: "#38bdf8" },
-            { label: "1.000 TL\nNAKİT",        weight: 2,  bg: "#f1f5f9", text: "#0f172a" },
-            { label: "250 TL\nNAKİT",          weight: 5,  bg: "#0f172a", text: "#38bdf8" },
-            { label: "2 TL BET\n150 FREESPIN", weight: 3,  bg: "#f1f5f9", text: "#0f172a" },
+            { label: "LOSE", weight: 30, bg: "#0f172a", text: "#38bdf8" },
+            { label: "1 TL BET\n150 FREESPIN", weight: 5, bg: "#f1f5f9", text: "#0f172a" },
+            { label: "1 TL BET\n25 FREESPIN", weight: 15, bg: "#0f172a", text: "#38bdf8" },
+            { label: "10.000 TL\nNAKİT", weight: 1, bg: "#f1f5f9", text: "#0f172a" },
+            { label: "LOSE", weight: 20, bg: "#0f172a", text: "#38bdf8" },
+            { label: "2 TL BET\n100 FREESPIN", weight: 5, bg: "#f1f5f9", text: "#0f172a" },
+            { label: "LOSE", weight: 20, bg: "#0f172a", text: "#38bdf8" },
+            { label: "1.000 TL\nNAKİT", weight: 2, bg: "#f1f5f9", text: "#0f172a" },
+            { label: "250 TL\nNAKİT", weight: 5, bg: "#0f172a", text: "#38bdf8" },
+            { label: "2 TL BET\n150 FREESPIN", weight: 3, bg: "#f1f5f9", text: "#0f172a" },
             { label: "1 TL BET\n100 FREESPIN", weight: 10, bg: "#0f172a", text: "#38bdf8" },
-            { label: "2.500 TL\nNAKİT",        weight: 2,  bg: "#f1f5f9", text: "#0f172a" }
+            { label: "2.500 TL\nNAKİT", weight: 2, bg: "#f1f5f9", text: "#0f172a" }
         ];
 
         const totalSectors = sectors.length;
@@ -185,22 +169,25 @@
 
         function drawWheel() {
             sectors.forEach((sector, i) => {
-                const angle = i * arc - Math.PI / 2;
+                const angle = i * arc - Math.PI / 2; 
                 ctx.beginPath();
                 ctx.fillStyle = sector.bg;
                 ctx.moveTo(centerX, centerY);
                 ctx.arc(centerX, centerY, radius, angle, angle + arc);
                 ctx.lineTo(centerX, centerY);
                 ctx.fill();
+
                 ctx.strokeStyle = "rgba(148, 163, 184, 0.3)";
                 ctx.lineWidth = 1.5;
                 ctx.stroke();
+
                 ctx.save();
                 ctx.translate(centerX, centerY);
                 ctx.rotate(angle + arc / 2);
                 ctx.textAlign = "right";
                 ctx.fillStyle = sector.text;
                 ctx.font = "bold 13px 'Montserrat'";
+                
                 const lines = sector.label.split('\n');
                 lines.forEach((line, j) => {
                     const yPos = (j * 15) - ((lines.length - 1) * 7.5);
@@ -211,122 +198,121 @@
         }
         drawWheel();
 
-        function findSectorIndex(odul) {
-            const normalized = odul.replace(/ /g, '\n');
+        function getWinnerIndex() {
+            let totalWeight = sectors.reduce((acc, val) => acc + val.weight, 0);
+            let random = Math.random() * totalWeight;
             for (let i = 0; i < sectors.length; i++) {
-                if (sectors[i].label === normalized || sectors[i].label === odul) return i;
-            }
-            if (odul === "LOSE") {
-                const loseIndexes = sectors.map((s, i) => s.label === "LOSE" ? i : -1).filter(i => i !== -1);
-                return loseIndexes[Math.floor(Math.random() * loseIndexes.length)];
+                if (random < sectors[i].weight) return i;
+                random -= sectors[i].weight;
             }
             return 0;
+        }
+
+        function generateCode(prize) {
+            const ts = Date.now();
+            const raw = "VIP|" + prize + "|" + ts;
+            return btoa(unescape(encodeURIComponent(raw))).replace(/=/g, '');
         }
 
         let currentRotation = 0;
 
         spinBtn.addEventListener("click", async () => {
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
+            // Telegram'dan kullanıcı ID'sini alıyoruz
+            const user = tg.initDataUnsafe?.user;
+            const userId = user ? user.id : 0;
+
+            if (!userId) {
+                alert("Telegram kullanıcı bilginiz alınamadı, lütfen bot üzerinden tekrar giriş yapın.");
+                return;
+            }
+
             spinBtn.disabled = true;
-            spinBtn.innerText = "BEKLENİYOR...";
+            spinBtn.innerText = "KONTROL EDİLİYOR...";
 
-            const userId = getUserId();
-
-            let serverOdul = null;
-            let serverKazandi = false;
-            let serverKod = "";
-
-            const spinResult = await new Promise((resolve) => {
-                const xhr = new XMLHttpRequest();
-                xhr.open("POST", `${NGROK_URL}/spin_start`, true);
-                xhr.setRequestHeader("Content-Type", "application/json");
-                xhr.timeout = 10000;
-                xhr.onload = function() {
-                    resolve({ status: xhr.status, text: xhr.responseText });
-                };
-                xhr.onerror = function() {
-                    resolve({ status: 0, text: "network_error" });
-                };
-                xhr.ontimeout = function() {
-                    resolve({ status: 0, text: "timeout" });
-                };
-                xhr.send(JSON.stringify({ user_id: userId }));
-            });
-
-            if (spinResult.status === 0) {
-                alert("Bağlantı hatası: " + spinResult.text);
-                spinBtn.disabled = false;
-                spinBtn.innerText = "ÇARKI DÖNDÜR";
-                return;
-            }
-
-            if (spinResult.status === 429) {
-                alert("Zaten çarkını çevirdin! Bekleme süresi dolmadan tekrar çeviremezsin.");
-                spinBtn.disabled = false;
-                spinBtn.innerText = "ÇARKI DÖNDÜR";
-                return;
-            }
-
-            if (spinResult.status !== 200) {
-                alert("Sunucu hatası: " + spinResult.text);
-                spinBtn.disabled = false;
-                spinBtn.innerText = "ÇARKI DÖNDÜR";
-                return;
-            }
-
+            // Sunucuya "adam butona bastı, hakkını yak" sinyali gönderiyoruz
             try {
-                const data = JSON.parse(spinResult.text);
-                serverOdul    = data.odul;
-                serverKazandi = data.kazandi;
-                serverKod     = data.kod || "";
-            } catch(e) {
-                alert("Veri hatası: " + spinResult.text);
-                spinBtn.disabled = false;
+                // DİKKAT: AŞAĞIDAKİ LİNKİ KENDİ CLOUDFLARE LİNKİNLE DEĞİŞTİR!
+                // ÖRNEK: https://bufing-factors-membrane-checklist.trycloudflare.com/spin_start
+                const tunnelUrl = "https://BURAYA_CLOUDFLARE_LINKIN_GELECEK.trycloudflare.com/spin_start";
+                
+                const response = await fetch(tunnelUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ user_id: userId })
+                });
+
+                // Eğer sunucudan 429 yanıtı gelirse hakkı yok demektir
+                if (response.status === 429) {
+                    alert("Çarkı zaten çevirdin! Sürenin dolmasını beklemelisin.");
+                    spinBtn.innerText = "ÇARKI DÖNDÜR";
+                    return; 
+                }
+                
+                // Bağlantı başarısız olursa hile ihtimaline karşı çark dönmesin
+                if (!response.ok) {
+                    alert("Sunucu ile bağlantı kurulamadı. Lütfen tekrar deneyin.");
+                    spinBtn.innerText = "ÇARKI DÖNDÜR";
+                    spinBtn.disabled = false;
+                    return;
+                }
+            } catch (error) {
+                console.error("Sunucu bağlantı hatası:", error);
+                alert("Bağlantı hatası! Lütfen internetinizi kontrol edip tekrar deneyin.");
                 spinBtn.innerText = "ÇARKI DÖNDÜR";
+                spinBtn.disabled = false;
                 return;
             }
 
+            // İstek başarılıysa ve her şey normalse çarkı döndürmeye başla
+            if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
             spinBtn.innerText = "DÖNÜYOR...";
 
-            const winIndex = findSectorIndex(serverOdul);
+            const winIndex = getWinnerIndex();
+            const kazanilan = sectors[winIndex].label.replace('\n', ' ');
+
             const sliceAngle = 360 / totalSectors;
             const targetAngle = (winIndex * sliceAngle) + (sliceAngle / 2);
-            const spins = 12 * 360;
-            const currentMod = currentRotation % 360;
-            const randomOffset = (Math.random() * (sliceAngle - 4)) - ((sliceAngle - 4) / 2);
-            currentRotation = currentRotation + spins + targetAngle - currentMod + randomOffset;
 
-            canvas.style.transition = "transform 6s cubic-bezier(0.17, 0.67, 0.12, 0.99)";
+            const spins = 12 * 360; 
+            const currentMod = currentRotation % 360;
+            const targetRotation = (360 - targetAngle);
+            const randomOffset = (Math.random() * (sliceAngle - 4)) - ((sliceAngle - 4) / 2); 
+            
+            currentRotation = currentRotation + spins + targetRotation - currentMod + randomOffset;
             canvas.style.transform = `rotate(${currentRotation}deg)`;
 
             setTimeout(() => {
+                const destekKodu = generateCode(kazanilan);
+                const durum = kazanilan === "LOSE" ? "kaybetti" : "kazandi";
+                
                 const overlay = document.getElementById("sonucOverlay");
-                const title   = document.getElementById("sonucTitle");
-                const desc    = document.getElementById("sonucDesc");
+                const title = document.getElementById("sonucTitle");
+                const desc = document.getElementById("sonucDesc");
 
-                if (!serverKazandi) {
-                    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+                if(durum === "kaybetti") {
+                    if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
                     title.className = "sonuc-title sonuc-lose";
                     title.innerText = "MAALESEF 😔";
-                    desc.innerText  = "Üzgünüm, bir şey kazanamadın.\nBir dahaki sefere!";
+                    desc.innerText = "Üzgünüm, bir şey kazanamadın.\nBir dahaki sefere!";
                 } else {
-                    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                    if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
                     title.className = "sonuc-title sonuc-win";
                     title.innerText = "TEBRİKLER! 🎉";
-                    desc.innerHTML  = `Kazandığın Ödül:<br><span style="color:#fff; font-size:22px;">${serverOdul}</span><br><br>Oyun kodun bot üzerinden sana mesaj olarak gönderiliyor...`;
+                    desc.innerHTML = `Kazandığın Ödül:<br><span style="color:#fff; font-size:22px;">${kazanilan}</span><br><br>Oyun kodun bot üzerinden sana mesaj olarak gönderiliyor...`;
                 }
 
                 overlay.classList.add("show");
 
                 setTimeout(() => {
-                    tg.sendData(JSON.stringify({
-                        durum: serverKazandi ? "kazandi" : "kaybetti",
-                        odul:  serverOdul,
-                        kod:   serverKod
-                    }));
+                    const data = {
+                        durum: durum,
+                        odul: kazanilan,
+                        kod: destekKodu
+                    };
+                    tg.sendData(JSON.stringify(data));
                 }, 3500);
 
-            }, 6000);
+            }, 6000); 
         });
     </script>
 </body>
