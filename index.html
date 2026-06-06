@@ -217,12 +217,21 @@
         let currentRotation = 0;
 
         spinBtn.addEventListener("click", async () => {
-            // Telegram'dan kullanıcı ID'sini alıyoruz
+            // Telegram'dan ve URL'den kullanıcı ID'sini alıyoruz
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlUid = urlParams.get('uid');
             const user = tg.initDataUnsafe?.user;
-            const userId = user ? user.id : 0;
+            
+            let userId = 0;
+            if (user && user.id) {
+                userId = user.id;
+            } else if (urlUid) {
+                userId = parseInt(urlUid);
+            }
 
-            if (!userId) {
-                alert("Telegram kullanıcı bilginiz alınamadı, lütfen bot üzerinden tekrar giriş yapın.");
+            if (!userId || isNaN(userId)) {
+                // Eğer hata verirse ekrana tam olarak neyin eksik olduğunu yazdıracak:
+                alert("HATA DETAYI:\nURL: " + window.location.href + "\nURL_UID: " + urlUid + "\nTG_USER: " + (user ? "Var" : "Yok"));
                 return;
             }
 
