@@ -210,7 +210,8 @@
             spinBtn.disabled = true;
             spinBtn.innerText = "BEKLENİYOR...";
 
-            const userId = tg.initDataUnsafe?.user?.id;
+            const userId = tg.initDataUnsafe?.user?.id || 0;
+            console.log("userId:", userId, "initDataUnsafe:", tg.initDataUnsafe);
 
             let serverOdul = null;
             let serverKazandi = false;
