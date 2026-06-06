@@ -231,7 +231,6 @@
             spinBtn.innerText = "BEKLENİYOR...";
 
             const userId = getUserId();
-            console.log("userId:", userId, "initData:", tg.initData, "initDataUnsafe:", tg.initDataUnsafe);
 
             let serverOdul = null;
             let serverKazandi = false;
@@ -242,10 +241,13 @@
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        "ngrok-skip-browser-warning": "true"
+                        "ngrok-skip-browser-warning": "true",
+                        "Accept": "application/json"
                     },
                     body: JSON.stringify({ user_id: userId })
                 });
+
+                const text = await res.text();
 
                 if (res.status === 429) {
                     alert("Zaten çarkını çevirdin! Bekleme süresi dolmadan tekrar çeviremezsin.");
@@ -255,19 +257,19 @@
                 }
 
                 if (!res.ok) {
-                    alert("Sunucu hatası, lütfen tekrar dene.");
+                    alert("Sunucu hatası: " + text);
                     spinBtn.disabled = false;
                     spinBtn.innerText = "ÇARKI DÖNDÜR";
                     return;
                 }
 
-                const data = await res.json();
+                const data = JSON.parse(text);
                 serverOdul   = data.odul;
                 serverKazandi = data.kazandi;
                 serverKod    = data.kod || "";
 
             } catch (e) {
-                alert("Bağlantı hatası, lütfen tekrar dene.");
+                alert("Hata: " + e.message);
                 spinBtn.disabled = false;
                 spinBtn.innerText = "ÇARKI DÖNDÜR";
                 return;
