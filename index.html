@@ -135,15 +135,20 @@
 
         function getUserId() {
             try {
+                // 1. initDataUnsafe'den dene
                 const u = tg.initDataUnsafe?.user;
                 if (u && u.id) return u.id;
-                // initData'dan manuel parse
+                // 2. initData'dan manuel parse
                 const params = new URLSearchParams(tg.initData);
                 const userStr = params.get('user');
                 if (userStr) {
                     const parsed = JSON.parse(decodeURIComponent(userStr));
                     if (parsed && parsed.id) return parsed.id;
                 }
+                // 3. URL parametresinden al (bot tarafından eklendi)
+                const urlParams = new URLSearchParams(window.location.search);
+                const uid = urlParams.get('uid');
+                if (uid) return parseInt(uid);
             } catch(e) { console.error("getUserId hatası:", e); }
             return 0;
         }
