@@ -1,200 +1,777 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nakit İade Talep Formu</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        /* Şık ve modern bir font çekiyoruz */
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Nakit İade Talebi</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Barlow:wght@300;400;500;600&display=swap');
 
-        body {
-            font-family: 'Poppins', sans-serif;
-            /* Derin ve klas bir arkaplan geçişi */
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); 
-            color: #ffffff;
-            margin: 0;
-            padding: 15px;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            box-sizing: border-box;
-        }
+  :root {
+    --gold: #f0b429;
+    --gold-dark: #c88f00;
+    --bg: #0d0f14;
+    --surface: #151921;
+    --surface2: #1c2130;
+    --border: #2a3347;
+    --text: #e8ecf4;
+    --muted: #7a8499;
+    --red: #e05252;
+    --green: #4caf82;
+  }
 
-        /* Cam efekti (Glassmorphism) verilmiş ana kutu */
-        .container {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 25px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-            margin-top: 10px;
-        }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* Üst kısımdaki havalı başlık alanı */
-        .header-banner {
-            background: linear-gradient(90deg, #d4af37, #ffdf00); /* Altın Sarısı Geçiş */
-            border-radius: 12px;
-            padding: 15px;
-            text-align: center;
-            margin-bottom: 25px;
-            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
-        }
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
 
-        .header-banner h2 {
-            margin: 0;
-            font-size: 22px;
-            font-weight: 800;
-            color: #1a1a1a;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+  /* ── VIEWS ── */
+  .view { display: none; }
+  .view.active { display: block; }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+  /* ── HEADER ── */
+  .header {
+    background: linear-gradient(135deg, #1a1200 0%, #2a1e00 50%, #1a1200 100%);
+    border-bottom: 2px solid var(--gold-dark);
+    padding: 18px 20px 14px;
+    text-align: center;
+    position: relative;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -2px; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .header h1 {
+    font-family: 'Oswald', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+  .header p {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+    letter-spacing: 0.5px;
+  }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 13px;
-            color: #e0e0e0;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
+  /* ── TAB NAV ── */
+  .tab-nav {
+    display: flex;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 13px 8px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'Barlow', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+  }
+  .tab-btn.active {
+    color: var(--gold);
+  }
+  .tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 15%; right: 15%;
+    height: 2px;
+    background: var(--gold);
+    border-radius: 2px 2px 0 0;
+  }
 
-        /* Kutucuk tasarımları */
-        input, select {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 12px;
-            background-color: rgba(0, 0, 0, 0.25);
-            color: #ffffff;
-            font-size: 14px;
-            box-sizing: border-box;
-            outline: none;
-            transition: all 0.3s ease;
-            font-family: 'Poppins', sans-serif;
-            appearance: none; /* Select okunu varsayılandan çıkarır */
-        }
+  /* ── FORM VIEW ── */
+  .form-wrap {
+    padding: 20px 16px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
 
-        /* Tıklanınca yanan altın sarısı parlama efekti */
-        input:focus, select:focus {
-            border-color: #ffdf00;
-            box-shadow: 0 0 12px rgba(255, 223, 0, 0.4);
-            background-color: rgba(0, 0, 0, 0.4);
-        }
+  .section-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--gold-dark);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    margin-top: 20px;
+  }
+  .section-label:first-child { margin-top: 0; }
 
-        /* Select içindeki seçeneklerin arkaplanı (Telefonda okunaklı olsun diye) */
-        option {
-            background-color: #203a43;
-            color: white;
-        }
+  /* Campaign cards */
+  .camp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .camp-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 10px;
+    cursor: pointer;
+    transition: all 0.18s;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    user-select: none;
+  }
+  .camp-card:hover { border-color: var(--gold-dark); color: var(--text); }
+  .camp-card.selected {
+    background: linear-gradient(135deg, #251c00, #1a1200);
+    border-color: var(--gold);
+    color: var(--gold);
+    box-shadow: 0 0 12px rgba(240,180,41,0.15);
+  }
+  .camp-card .camp-icon { font-size: 18px; margin-bottom: 4px; display: block; }
+  .camp-card .camp-pct { font-family: 'Oswald', sans-serif; font-size: 18px; font-weight: 700; display: block; }
+  .camp-card .camp-name { font-size: 10px; color: inherit; opacity: 0.8; }
 
-        input::placeholder {
-            color: rgba(255, 255, 255, 0.4);
-        }
+  /* Site select */
+  .custom-select-wrap { position: relative; }
+  .custom-select {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px;
+    padding: 12px 36px 12px 14px;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .custom-select:focus { border-color: var(--gold); }
+  .select-arrow {
+    position: absolute;
+    right: 12px; top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--muted);
+    font-size: 12px;
+  }
 
-        .info-text {
-            font-size: 12px;
-            color: #a0a5a8;
-            text-align: center;
-            margin-top: 20px;
-            line-height: 1.5;
-        }
-    </style>
+  /* Inputs */
+  .field {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    width: 100%;
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .field::placeholder { color: var(--muted); }
+  .field:focus { border-color: var(--gold); }
+  .field.error { border-color: var(--red); }
+
+  .field-group { margin-bottom: 10px; }
+  .field-hint {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 5px;
+    padding-left: 2px;
+  }
+
+  /* Amount row */
+  .amount-wrap { position: relative; }
+  .amount-currency {
+    position: absolute;
+    right: 14px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    pointer-events: none;
+  }
+
+  /* Crypto tabs */
+  .crypto-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .crypto-tab {
+    flex: 1;
+    padding: 8px 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: 'Barlow', sans-serif;
+  }
+  .crypto-tab.active {
+    background: #1a1200;
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  /* Submit button */
+  .submit-btn {
+    width: 100%;
+    margin-top: 24px;
+    padding: 15px;
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+    border: none;
+    border-radius: 10px;
+    color: #0d0f14;
+    font-family: 'Oswald', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  .submit-btn:active { transform: scale(0.98); opacity: 0.9; }
+  .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── QUERY VIEW ── */
+  .query-wrap {
+    padding: 20px 16px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .search-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .search-row .field { flex: 1; }
+  .search-btn {
+    padding: 0 18px;
+    background: var(--gold-dark);
+    border: none;
+    border-radius: 8px;
+    color: #0d0f14;
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+  }
+  .search-btn:active { opacity: 0.8; }
+
+  /* Result card */
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    display: none;
+  }
+  .result-card.show { display: block; }
+
+  .result-id {
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(42,51,71,0.5);
+    font-size: 13px;
+  }
+  .result-row:last-child { border-bottom: none; }
+  .result-row .label { color: var(--muted); }
+  .result-row .val { font-weight: 600; text-align: right; max-width: 60%; word-break: break-all; }
+
+  .status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    font-family: 'Oswald', sans-serif;
+  }
+  .status-beklemede { background: #2a1e00; color: var(--gold); border: 1px solid var(--gold-dark); }
+  .status-onaylandi { background: #0d2018; color: var(--green); border: 1px solid var(--green); }
+  .status-reddedildi { background: #200d0d; color: var(--red); border: 1px solid var(--red); }
+
+  .not-found {
+    text-align: center;
+    padding: 30px 0;
+    color: var(--muted);
+    font-size: 14px;
+    display: none;
+  }
+  .not-found.show { display: block; }
+  .not-found .icon { font-size: 32px; margin-bottom: 10px; }
+
+  /* ── SUCCESS OVERLAY ── */
+  .success-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(13,15,20,0.96);
+    z-index: 100;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    text-align: center;
+  }
+  .success-overlay.show { display: flex; }
+  .success-icon { font-size: 60px; margin-bottom: 20px; }
+  .success-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 24px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+  .success-msg { color: var(--muted); font-size: 14px; line-height: 1.6; margin-bottom: 8px; }
+  .success-code {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-family: monospace;
+    font-size: 18px;
+    color: var(--gold);
+    letter-spacing: 3px;
+    margin: 16px 0;
+  }
+  .success-note { font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .close-btn {
+    margin-top: 24px;
+    padding: 12px 32px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px;
+    letter-spacing: 1px;
+    cursor: pointer;
+  }
+  .close-btn:active { opacity: 0.7; }
+
+  /* ── ERROR MSG ── */
+  .err-msg {
+    background: #200d0d;
+    border: 1px solid var(--red);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--red);
+    font-size: 12px;
+    margin-top: 10px;
+    display: none;
+  }
+  .err-msg.show { display: block; }
+
+  /* Loading */
+  .loading { text-align: center; padding: 30px; color: var(--muted); font-size: 14px; }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
 </head>
 <body>
 
-    <div class="container">
-        <!-- Logo/Afiş Alanı -->
-        <div class="header-banner">
-            <h2>💸 Nakit İade</h2>
-        </div>
+<div class="header">
+  <h1>💰 Nakit İade</h1>
+  <p>Yatırım iade talebi oluştur veya sorgula</p>
+</div>
 
-        <div class="form-group">
-            <label>🎯 Kampanya Seçimi</label>
-            <select id="kampanya">
-                <option value="">Lütfen bir kampanya seçin</option>
-                <option value="500_yatir_500_al">500₺ Yatır 500₺ Nakit İade Al</option>
-                <option value="1000_yatir_1000_al">1000₺ Yatır 1000₺ Nakit İade Al</option>
-                <option value="ilk_yatirim_yuzde100">İlk Yatırıma Özel %100 İade</option>
-            </select>
-        </div>
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('form')">📋 Talep Oluştur</button>
+  <button class="tab-btn" onclick="switchTab('query')">🔍 Talep Sorgula</button>
+</div>
 
-        <div class="form-group">
-            <label>🎰 Yatırım Yapılan Site</label>
-            <select id="site">
-                <option value="">Lütfen yatırım yaptığınız siteyi seçin</option>
-                <!-- Python tarafından otomatik doldurulacak, şimdilik test verileri -->
-                <option value="Hitbet">Hitbet</option>
-                <option value="Coinbar">Coinbar</option>
-                <option value="Kavbet">Kavbet</option>
-            </select>
-        </div>
+<!-- ══════════ FORM VIEW ══════════ -->
+<div id="view-form" class="view active">
+  <div class="form-wrap">
 
-        <div class="form-group">
-            <label>👤 Site Kullanıcı Adı veya ID</label>
-            <input type="text" id="kullanici_adi" placeholder="Örn: semt123">
-        </div>
-
-        <div class="form-group">
-            <label>💰 Yatırım Miktarı (₺)</label>
-            <input type="number" id="yatirim_miktari" placeholder="Örn: 500">
-        </div>
-
-        <div class="form-group">
-            <label>🔗 Kripto Cüzdan Adresi (TRC20)</label>
-            <input type="text" id="kripto_adres" placeholder="T... ile başlayan adres">
-        </div>
-
-        <p class="info-text">Talebiniz incelendikten sonra bot üzerinden durumu sorgulayabilirsiniz.</p>
+    <div class="section-label">Kampanya Seç</div>
+    <div class="camp-grid">
+      <div class="camp-card" onclick="selectCamp(this,'%25 Kayıp İadesi')">
+        <span class="camp-icon">💸</span>
+        <span class="camp-pct">%25</span>
+        <span class="camp-name">Kayıp İadesi</span>
+      </div>
+      <div class="camp-card" onclick="selectCamp(this,'%50 Kayıp İadesi')">
+        <span class="camp-icon">💰</span>
+        <span class="camp-pct">%50</span>
+        <span class="camp-name">Kayıp İadesi</span>
+      </div>
+      <div class="camp-card" onclick="selectCamp(this,'%100 Yatırım İadesi')">
+        <span class="camp-icon">🏆</span>
+        <span class="camp-pct">%100</span>
+        <span class="camp-name">Yatırım İadesi</span>
+      </div>
+      <div class="camp-card" onclick="selectCamp(this,'Özel Kampanya')">
+        <span class="camp-icon">⭐</span>
+        <span class="camp-pct">ÖZEL</span>
+        <span class="camp-name">Kampanya</span>
+      </div>
     </div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand(); 
-        
-        // Telegram buton rengini formun temasına uyduruyoruz (Altın Sarısı)
-        tg.MainButton.setParams({
-            text: "TALEBİ GÖNDER",
-            color: "#d4af37",
-            text_color: "#1a1a1a",
-            is_active: true,
-            is_visible: true
-        });
+    <div class="section-label" style="margin-top:20px;">Site Seç</div>
+    <div class="custom-select-wrap field-group">
+      <select id="siteSelect" class="custom-select">
+        <option value="">— Site seçiniz —</option>
+      </select>
+      <span class="select-arrow">▼</span>
+    </div>
 
-        tg.MainButton.onClick(function() {
-            const kampanya = document.getElementById("kampanya").value;
-            const site = document.getElementById("site").value;
-            const kullaniciAdi = document.getElementById("kullanici_adi").value.trim();
-            const yatirimMiktari = document.getElementById("yatirim_miktari").value.trim();
-            const kriptoAdres = document.getElementById("kripto_adres").value.trim();
+    <div class="section-label">Site Kullanıcı Adı / ID</div>
+    <div class="field-group">
+      <input id="siteUser" class="field" type="text" placeholder="Örn: jonsnow01 veya 123456">
+      <div class="field-hint">Sitedeki kullanıcı adınızı veya ID'nizi girin</div>
+    </div>
 
-            if (!kampanya || !site || !kullaniciAdi || !yatirimMiktari || !kriptoAdres) {
-                tg.showAlert("⚠️ Lütfen tüm alanları eksiksiz doldurun!");
-                return;
-            }
+    <div class="section-label">Yatırım Miktarı</div>
+    <div class="field-group amount-wrap">
+      <input id="amount" class="field" type="number" placeholder="0.00" step="0.01" min="1">
+      <span class="amount-currency">TL</span>
+    </div>
 
-            const data = {
-                tip: "nakit_iade",
-                kampanya: kampanya,
-                site: site,
-                kullanici_adi: kullaniciAdi,
-                yatirim_miktari: yatirimMiktari,
-                kripto_adres: kriptoAdres
-            };
+    <div class="section-label">Kripto Ağı</div>
+    <div class="crypto-tabs">
+      <div class="crypto-tab active" onclick="selectCrypto(this,'TRC20')">TRC20<br><small style="font-size:9px;opacity:0.7">USDT</small></div>
+      <div class="crypto-tab" onclick="selectCrypto(this,'ERC20')">ERC20<br><small style="font-size:9px;opacity:0.7">USDT</small></div>
+      <div class="crypto-tab" onclick="selectCrypto(this,'BEP20')">BEP20<br><small style="font-size:9px;opacity:0.7">USDT</small></div>
+      <div class="crypto-tab" onclick="selectCrypto(this,'BTC')">BTC<br><small style="font-size:9px;opacity:0.7">Bitcoin</small></div>
+      <div class="crypto-tab" onclick="selectCrypto(this,'ETH')">ETH<br><small style="font-size:9px;opacity:0.7">Ethereum</small></div>
+    </div>
 
-            tg.sendData(JSON.stringify(data));
-        });
-    </script>
+    <div class="section-label">Kripto Cüzdan Adresi</div>
+    <div class="field-group">
+      <input id="cryptoAddr" class="field" type="text" placeholder="Cüzdan adresinizi girin">
+      <div class="field-hint">İade gönderilecek kripto adresi</div>
+    </div>
 
+    <div class="err-msg" id="errMsg">Lütfen tüm alanları eksiksiz doldurun.</div>
+
+    <button class="submit-btn" id="submitBtn" onclick="submitForm()">
+      TALEP GÖNDER
+    </button>
+
+  </div>
+</div>
+
+<!-- ══════════ QUERY VIEW ══════════ -->
+<div id="view-query" class="view">
+  <div class="query-wrap">
+    <div class="section-label" style="margin-top:0">Talep Kodu ile Sorgula</div>
+    <div class="search-row">
+      <input id="queryInput" class="field" type="text" placeholder="Talep kodu (Örn: NI-A3X9K)" maxlength="12">
+      <button class="search-btn" onclick="queryTalep()">SORGULA</button>
+    </div>
+
+    <div class="loading" id="queryLoading" style="display:none">
+      <div class="spinner"></div>
+      Sorgulanıyor...
+    </div>
+
+    <div class="not-found" id="notFound">
+      <div class="icon">🔍</div>
+      Bu koda ait talep bulunamadı.<br>Kodu doğru girdiğinizden emin olun.
+    </div>
+
+    <div class="result-card" id="resultCard">
+      <div class="result-id" id="resultId">—</div>
+      <div class="result-row">
+        <span class="label">Kampanya</span>
+        <span class="val" id="r-camp">—</span>
+      </div>
+      <div class="result-row">
+        <span class="label">Site</span>
+        <span class="val" id="r-site">—</span>
+      </div>
+      <div class="result-row">
+        <span class="label">Kullanıcı</span>
+        <span class="val" id="r-user">—</span>
+      </div>
+      <div class="result-row">
+        <span class="label">Miktar</span>
+        <span class="val" id="r-amount">—</span>
+      </div>
+      <div class="result-row">
+        <span class="label">Durum</span>
+        <span class="val" id="r-status">—</span>
+      </div>
+      <div class="result-row">
+        <span class="label">Tarih</span>
+        <span class="val" id="r-date">—</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════ SUCCESS OVERLAY ══════════ -->
+<div class="success-overlay" id="successOverlay">
+  <div class="success-icon">✅</div>
+  <div class="success-title">TALEP GÖNDERİLDİ</div>
+  <div class="success-msg">Talebiniz yetkililere iletildi.<br>Aşağıdaki kodu not alın:</div>
+  <div class="success-code" id="successCode">—</div>
+  <div class="success-note">
+    Bu kod ile talebinizi <b>Talep Sorgula</b> sekmesinden takip edebilirsiniz.<br>
+    Onay/red bilgisi size Telegram üzerinden bildirilecektir.
+  </div>
+  <button class="close-btn" onclick="closeSuccess()">TAMAM</button>
+</div>
+
+<script>
+// ── Telegram WebApp init ──
+const tg = window.Telegram?.WebApp;
+if (tg) {
+  tg.ready();
+  tg.expand();
+}
+
+// ── Sponsor site list (URL param override or default) ──
+const params = new URLSearchParams(window.location.search);
+const sitesParam = params.get('sites');
+let SITES = [];
+if (sitesParam) {
+  try { SITES = JSON.parse(decodeURIComponent(sitesParam)); } catch(e) {}
+}
+// Fallback default list (bot will pass real list via URL param)
+if (!SITES.length) {
+  SITES = [
+    "Artemisbet","Coinbar","Hizlicasino","Kavbet","Hitbet",
+    "Jojobet","Matbet","Turboslot","Elitcasino","Megabahis",
+    "Egebet","Nakitbahis","Lunabet","Pusulabet","Odeonbet","Mavibet",
+    "Betvole","Casinomilyon","Lizbonbet","Holiganbet","Bahigo",
+    "Bettilt","Vdcasino","Pasgol","Betpark","Piabet","Rexbet",
+    "1xbet","Betboo","Betnano","Bahsegel","Betturkey"
+  ];
+}
+
+// Populate select
+const sel = document.getElementById('siteSelect');
+SITES.forEach(s => {
+  const opt = document.createElement('option');
+  opt.value = s;
+  opt.textContent = s;
+  sel.appendChild(opt);
+});
+
+// ── State ──
+let selectedCamp = '';
+let selectedCrypto = 'TRC20';
+
+// ── Tab switch ──
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    b.classList.toggle('active', (tab==='form'?i===0:i===1));
+  });
+  document.getElementById('view-form').classList.toggle('active', tab==='form');
+  document.getElementById('view-query').classList.toggle('active', tab==='query');
+}
+
+// ── Campaign select ──
+function selectCamp(el, camp) {
+  document.querySelectorAll('.camp-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedCamp = camp;
+}
+
+// ── Crypto select ──
+function selectCrypto(el, crypto) {
+  document.querySelectorAll('.crypto-tab').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  selectedCrypto = crypto;
+}
+
+// ── Generate unique code ──
+function genCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let c = 'NI-';
+  for(let i=0;i<5;i++) c += chars[Math.floor(Math.random()*chars.length)];
+  return c;
+}
+
+// ── Storage helpers ──
+function saveRequest(code, data) {
+  try {
+    const all = JSON.parse(localStorage.getItem('ni_requests') || '{}');
+    all[code] = data;
+    localStorage.setItem('ni_requests', JSON.stringify(all));
+  } catch(e) {}
+}
+function getRequest(code) {
+  try {
+    const all = JSON.parse(localStorage.getItem('ni_requests') || '{}');
+    return all[code] || null;
+  } catch(e) { return null; }
+}
+
+// ── Submit ──
+async function submitForm() {
+  const site = sel.value;
+  const siteUser = document.getElementById('siteUser').value.trim();
+  const amount = document.getElementById('amount').value.trim();
+  const addr = document.getElementById('cryptoAddr').value.trim();
+  const errEl = document.getElementById('errMsg');
+
+  errEl.classList.remove('show');
+  document.querySelectorAll('.field').forEach(f => f.classList.remove('error'));
+
+  let hasErr = false;
+  if (!selectedCamp) { hasErr=true; }
+  if (!site) { sel.classList.add('error'); hasErr=true; }
+  if (!siteUser) { document.getElementById('siteUser').classList.add('error'); hasErr=true; }
+  if (!amount || parseFloat(amount)<=0) { document.getElementById('amount').classList.add('error'); hasErr=true; }
+  if (!addr) { document.getElementById('cryptoAddr').classList.add('error'); hasErr=true; }
+
+  if (hasErr) {
+    errEl.textContent = !selectedCamp ? 'Lütfen bir kampanya seçin ve tüm alanları doldurun.' : 'Lütfen tüm alanları eksiksiz doldurun.';
+    errEl.classList.add('show');
+    return;
+  }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'GÖNDERİLİYOR...';
+
+  const userId = tg?.initDataUnsafe?.user?.id || params.get('uid') || '0';
+  const userName = tg?.initDataUnsafe?.user?.username || tg?.initDataUnsafe?.user?.first_name || 'Bilinmiyor';
+  const code = genCode();
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('tr-TR') + ' ' + now.toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'});
+
+  const payload = {
+    type: 'nakitiade_talep',
+    code,
+    kampanya: selectedCamp,
+    site,
+    site_user: siteUser,
+    amount: parseFloat(amount),
+    crypto_network: selectedCrypto,
+    crypto_addr: addr,
+    user_id: userId,
+    user_name: userName,
+    date: dateStr,
+    status: 'beklemede'
+  };
+
+  // Save locally for query
+  saveRequest(code, payload);
+
+  // Send to Telegram WebApp
+  if (tg?.sendData) {
+    tg.sendData(JSON.stringify(payload));
+  }
+
+  // Show success
+  document.getElementById('successCode').textContent = code;
+  document.getElementById('successOverlay').classList.add('show');
+
+  btn.disabled = false;
+  btn.textContent = 'TALEP GÖNDER';
+}
+
+// ── Close success ──
+function closeSuccess() {
+  document.getElementById('successOverlay').classList.remove('show');
+  // Reset form
+  document.querySelectorAll('.camp-card').forEach(c => c.classList.remove('selected'));
+  selectedCamp = '';
+  document.getElementById('siteSelect').value = '';
+  document.getElementById('siteUser').value = '';
+  document.getElementById('amount').value = '';
+  document.getElementById('cryptoAddr').value = '';
+}
+
+// ── Query ──
+function queryTalep() {
+  const code = document.getElementById('queryInput').value.trim().toUpperCase();
+  const loading = document.getElementById('queryLoading');
+  const notFound = document.getElementById('notFound');
+  const card = document.getElementById('resultCard');
+
+  notFound.classList.remove('show');
+  card.classList.remove('show');
+  loading.style.display = 'block';
+
+  setTimeout(() => {
+    loading.style.display = 'none';
+
+    // Try local storage first
+    let data = getRequest(code);
+
+    if (!data) {
+      notFound.classList.add('show');
+      return;
+    }
+
+    // Fill card
+    document.getElementById('resultId').textContent = '📋 Talep #' + code;
+    document.getElementById('r-camp').textContent = data.kampanya || '—';
+    document.getElementById('r-site').textContent = data.site || '—';
+    document.getElementById('r-user').textContent = data.site_user || '—';
+    document.getElementById('r-amount').textContent = (data.amount||'—') + ' TL';
+    document.getElementById('r-date').textContent = data.date || '—';
+
+    const statusEl = document.getElementById('r-status');
+    const st = data.status || 'beklemede';
+    const stMap = {
+      'beklemede': ['status-beklemede','⏳ Beklemede'],
+      'onaylandi': ['status-onaylandi','✅ Onaylandı'],
+      'reddedildi': ['status-reddedildi','❌ Reddedildi']
+    };
+    const [cls, label] = stMap[st] || stMap['beklemede'];
+    statusEl.innerHTML = `<span class="status-badge ${cls}">${label}</span>`;
+
+    card.classList.add('show');
+  }, 600);
+}
+
+// Enter key on query input
+document.getElementById('queryInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') queryTalep();
+});
+</script>
 </body>
 </html>
