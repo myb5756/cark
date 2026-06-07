@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nakit İade Talep Formu</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* Şık ve modern bir font çekiyoruz */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            /* Derin ve klas bir arkaplan geçişi */
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); 
+            color: #ffffff;
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        /* Cam efekti (Glassmorphism) verilmiş ana kutu */
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            margin-top: 10px;
+        }
+
+        /* Üst kısımdaki havalı başlık alanı */
+        .header-banner {
+            background: linear-gradient(90deg, #d4af37, #ffdf00); /* Altın Sarısı Geçiş */
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .header-banner h2 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 800;
+            color: #1a1a1a;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #e0e0e0;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* Kutucuk tasarımları */
+        input, select {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            background-color: rgba(0, 0, 0, 0.25);
+            color: #ffffff;
+            font-size: 14px;
+            box-sizing: border-box;
+            outline: none;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+            appearance: none; /* Select okunu varsayılandan çıkarır */
+        }
+
+        /* Tıklanınca yanan altın sarısı parlama efekti */
+        input:focus, select:focus {
+            border-color: #ffdf00;
+            box-shadow: 0 0 12px rgba(255, 223, 0, 0.4);
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        /* Select içindeki seçeneklerin arkaplanı (Telefonda okunaklı olsun diye) */
+        option {
+            background-color: #203a43;
+            color: white;
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .info-text {
+            font-size: 12px;
+            color: #a0a5a8;
+            text-align: center;
+            margin-top: 20px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Logo/Afiş Alanı -->
+        <div class="header-banner">
+            <h2>💸 Nakit İade</h2>
+        </div>
+
+        <div class="form-group">
+            <label>🎯 Kampanya Seçimi</label>
+            <select id="kampanya">
+                <option value="">Lütfen bir kampanya seçin</option>
+                <option value="500_yatir_500_al">500₺ Yatır 500₺ Nakit İade Al</option>
+                <option value="1000_yatir_1000_al">1000₺ Yatır 1000₺ Nakit İade Al</option>
+                <option value="ilk_yatirim_yuzde100">İlk Yatırıma Özel %100 İade</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>🎰 Yatırım Yapılan Site</label>
+            <select id="site">
+                <option value="">Lütfen yatırım yaptığınız siteyi seçin</option>
+                <!-- Python tarafından otomatik doldurulacak, şimdilik test verileri -->
+                <option value="Hitbet">Hitbet</option>
+                <option value="Coinbar">Coinbar</option>
+                <option value="Kavbet">Kavbet</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>👤 Site Kullanıcı Adı veya ID</label>
+            <input type="text" id="kullanici_adi" placeholder="Örn: semt123">
+        </div>
+
+        <div class="form-group">
+            <label>💰 Yatırım Miktarı (₺)</label>
+            <input type="number" id="yatirim_miktari" placeholder="Örn: 500">
+        </div>
+
+        <div class="form-group">
+            <label>🔗 Kripto Cüzdan Adresi (TRC20)</label>
+            <input type="text" id="kripto_adres" placeholder="T... ile başlayan adres">
+        </div>
+
+        <p class="info-text">Talebiniz incelendikten sonra bot üzerinden durumu sorgulayabilirsiniz.</p>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); 
+        
+        // Telegram buton rengini formun temasına uyduruyoruz (Altın Sarısı)
+        tg.MainButton.setParams({
+            text: "TALEBİ GÖNDER",
+            color: "#d4af37",
+            text_color: "#1a1a1a",
+            is_active: true,
+            is_visible: true
+        });
+
+        tg.MainButton.onClick(function() {
+            const kampanya = document.getElementById("kampanya").value;
+            const site = document.getElementById("site").value;
+            const kullaniciAdi = document.getElementById("kullanici_adi").value.trim();
+            const yatirimMiktari = document.getElementById("yatirim_miktari").value.trim();
+            const kriptoAdres = document.getElementById("kripto_adres").value.trim();
+
+            if (!kampanya || !site || !kullaniciAdi || !yatirimMiktari || !kriptoAdres) {
+                tg.showAlert("⚠️ Lütfen tüm alanları eksiksiz doldurun!");
+                return;
+            }
+
+            const data = {
+                tip: "nakit_iade",
+                kampanya: kampanya,
+                site: site,
+                kullanici_adi: kullaniciAdi,
+                yatirim_miktari: yatirimMiktari,
+                kripto_adres: kriptoAdres
+            };
+
+            tg.sendData(JSON.stringify(data));
+        });
+    </script>
+
+</body>
+</html>
